@@ -1,0 +1,15 @@
+{
+  "name": "itmemory",
+  "title": "Tab Memory Usage",
+  "id": "jid1-fRvgLzKONCsPew",
+  "description": "Tab Memory Usage displays the amount of memory is used by each tab",
+  "author": "Jeremy Schomery",
+  "license": "MPL 2.0",
+  "version": "0.1.0",
+  "url": "http://mybrowseraddon.com/tab-memory.html",
+  "icon": "data/icons/32.png",
+  "icon64": "data/icons/64.png",
+  "permissions": {
+    "private-browsing": true
+  }
+}
