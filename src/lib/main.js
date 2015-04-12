@@ -6,8 +6,28 @@ var {viewFor} = require('sdk/view/core');
 var tabs = require('sdk/tabs');
 var unload = require('sdk/system/unload');
 var timers = require('sdk/timers');
+var sp = require('sdk/simple-prefs');
+var prefs = sp.prefs;
+var self = require('sdk/self');
+var data = self.data;
+var tabs = require('sdk/tabs');
+var pageMod = require('sdk/page-mod');
 
 var {DownloadUtils} = Cu.import('resource://gre/modules/DownloadUtils.jsm');
+
+// welcome
+(function () {
+  var version = prefs.version;
+  if (self.version !== version) {
+    timers.setTimeout(function () {
+      tabs.open(
+        'http://mybrowseraddon.com/tab-memory.html?v=' + self.version +
+        (version && version !== 'undefined' ? '&p=' + version + '&type=upgrade' : '&type=install')
+      );
+      prefs.version = self.version;
+    }, 3000);
+  }
+})();
 
 function update (tab, value) {
   tab = viewFor(tab);
@@ -15,13 +35,17 @@ function update (tab, value) {
   var label = document.getAnonymousElementByAttribute(tab, 'anonid', 'tab-memory');
   if (!label) {
     var title = document.getAnonymousElementByAttribute(tab, 'anonid', 'tab-label');
-    if (title) {
+    var close = document.getAnonymousElementByAttribute(tab, 'anonid', 'close-button');
+    if (title && close) {
       var hbox = document.createElement('hbox');
       label = document.createElement('label');
       label.setAttribute('anonid', 'tab-memory');
-      label.setAttribute('style', 'margin-left: 0; margin-right: 1px; text-decoration: underline; text-decoration-style: dashed;');
+      label.setAttribute(
+        'style',
+        'margin: 0 1px; text-decoration: underline; text-decoration-style: dotted;'
+      );
       hbox.appendChild(label);
-      title.parentNode.insertBefore(hbox, title);
+      title.parentNode.insertBefore(hbox, close);
     }
   }
   label.setAttribute('value', value);
@@ -32,8 +56,8 @@ function remove (tab) {
   var document = tab.ownerDocument;
   var label = document.getAnonymousElementByAttribute(tab, 'anonid', 'tab-memory');
   if (label) {
-    var stack = label.parentNode;
-    stack.parentNode.removeChild(stack);
+    var hbox = label.parentNode;
+    hbox.parentNode.removeChild(hbox);
   }
 }
 
@@ -76,7 +100,17 @@ var refresh = (function () {
 })();
 
 tabs.on('ready', refresh);
-tabs.on('load', refresh);
+pageMod.PageMod({
+  include: '*',
+  attachTo: ['top', 'existing', 'frame'],
+  contentScriptWhen: 'start',
+  contentScriptFile: data.url('inject.js'),
+  onAttach: function (worker) {
+    worker.port.on('update', function () {
+      refresh(worker.tab);
+    });
+  }
+});
 for (let tab of tabs) {
   refresh(tab);
 }
