@@ -5,11 +5,51 @@
   "description": "Tab Memory Usage displays the amount of memory is used by each tab",
   "author": "Jeremy Schomery",
   "license": "MPL 2.0",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "url": "http://mybrowseraddon.com/tab-memory.html",
   "icon": "data/icons/32.png",
   "icon64": "data/icons/64.png",
   "permissions": {
     "private-browsing": true
-  }
+  },
+  "preferences": [
+    {
+      "name": "position",
+      "type": "menulist",
+      "title": "Memory report position:",
+      "description": "This is where memory report is positioned on tab relative to the title",
+      "value": 0,
+      "options": [
+        {
+          "value": "0",
+          "label": "Before"
+        },
+        {
+          "value": "1",
+          "label": "After"
+        }
+      ]
+    },
+    {
+      "name": "delimiter",
+      "type": "menulist",
+      "title": "Memory report delimiter:",
+      "description": "This symbol is used to separate memory report from title",
+      "value": 1,
+      "options": [
+        {
+          "value": "0",
+          "label": ":"
+        },
+        {
+          "value": "1",
+          "label": "-"
+        },
+        {
+          "value": "2",
+          "label": "|"
+        }
+      ]
+    }
+  ]
 }

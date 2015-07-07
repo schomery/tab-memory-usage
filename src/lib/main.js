@@ -1,6 +1,6 @@
 'use strict';
 
-var {Cc, Ci, Cu} = require('chrome');
+var {Cu} = require('chrome');
 var tabUtils = require('sdk/tabs/utils');
 var {viewFor} = require('sdk/view/core');
 var tabs = require('sdk/tabs');
@@ -12,8 +12,55 @@ var self = require('sdk/self');
 var data = self.data;
 var tabs = require('sdk/tabs');
 var pageMod = require('sdk/page-mod');
+var windows = require('sdk/windows').browserWindows;
 
 var {DownloadUtils} = Cu.import('resource://gre/modules/DownloadUtils.jsm');
+
+var report = (function () {
+  function listen (e) {
+    var value = DownloadUtils.convertByteUnits(e.data.value).join('').replace('MB', 'M').replace('KB', 'K');
+    update(e.data.id, value);
+  }
+  function attach (window) {
+    var mm = viewFor(window).messageManager;
+    mm.loadFrameScript(data.url('chrome.js'), true);
+    mm.addMessageListener('report', listen);
+  }
+
+  for (let window of windows) {
+    attach(window);
+  }
+  windows.on('open', function (window) {
+    attach(window);
+  });
+  tabs.on('ready', function (tab) {
+    var mm = tabUtils.getBrowserForTab(viewFor(tab)).messageManager;
+    mm.sendAsyncMessage('id', tab.id);
+  });
+  tabs.on('open', function (tab) {
+    var mm = tabUtils.getBrowserForTab(viewFor(tab)).messageManager;
+    mm.sendAsyncMessage('id', tab.id);
+  });
+  for (let tab of tabs) {
+    var mm = tabUtils.getBrowserForTab(viewFor(tab)).messageManager;
+    mm.sendAsyncMessage('id', tab.id);
+  }
+
+  unload.when(function () {
+    for (let tab of tabs) {
+      var mm = tabUtils.getBrowserForTab(viewFor(tab)).messageManager;
+      mm.removeMessageListener('report', listen);
+      mm.sendAsyncMessage('detach');
+    }
+  });
+  return function (tab) {
+    if (tab) {
+      timers.setTimeout(function () {
+        tabUtils.getBrowserForTab(viewFor(tab)).messageManager.sendAsyncMessage('report');
+      }, 500);
+    }
+  };
+})();
 
 // welcome
 (function () {
@@ -29,44 +76,34 @@ var {DownloadUtils} = Cu.import('resource://gre/modules/DownloadUtils.jsm');
   }
 })();
 
-function update (tab, value) {
-  tab = viewFor(tab);
-  var document = tab.ownerDocument;
-  var label = document.getAnonymousElementByAttribute(tab, 'anonid', 'tab-memory');
-  if (!label) {
-    var title = document.getAnonymousElementByAttribute(tab, 'anonid', 'tab-label');
-    var close = document.getAnonymousElementByAttribute(tab, 'anonid', 'close-button');
-    if (title && close) {
-      var hbox = document.createElement('hbox');
-      label = document.createElement('label');
-      label.setAttribute('anonid', 'tab-memory');
-      label.setAttribute(
-        'style',
-        'margin: 0 1px; text-decoration: underline; text-decoration-style: dotted;'
-      );
-      hbox.appendChild(label);
-      title.parentNode.insertBefore(hbox, close);
+function title (value) {
+  return value
+    .replace(/^[\d\.\,]+.\ [\:\-\|]\ /, '')
+    .replace(/\ [\:\-\|]\ [\d\.\,]+.$/, '');
+}
+function update (id, value) {
+  var delimiter = [':', '-', '|'][prefs.delimiter];
+
+  for (let tab of tabs) {
+    if (tab.id === id) {
+      tab.title = prefs.position === 0 ?
+        (value + ' ' + delimiter + ' ' + title(tab.title)) :
+        (title(tab.title) + ' ' + delimiter + ' ' + value);
     }
   }
-  label.setAttribute('value', value);
 }
 
 function remove (tab) {
-  tab = viewFor(tab);
-  var document = tab.ownerDocument;
-  var label = document.getAnonymousElementByAttribute(tab, 'anonid', 'tab-memory');
-  if (label) {
-    var hbox = label.parentNode;
-    hbox.parentNode.removeChild(hbox);
-  }
+  tab.title = title(tab.title);
 }
 
 var refresh = (function () {
   var delay = 3000, times = {}, ids = {};
-  var mgr = Cc['@mozilla.org/memory-reporter-manager;1']
-    .getService(Ci.nsIMemoryReporterManager);
 
   return function (tab, forced) {
+    if (!tab) {
+      return;
+    }
     var time = times[tab.id];
     var id = ids[tab.id];
 
@@ -82,24 +119,13 @@ var refresh = (function () {
       return;
     }
     //console.error((new Date()).toString(), 'refreshing ...', tab.id);
-
     times[tab.id] = now;
-
-    var jsObjectsSize = {}, jsStringsSize = {}, jsOtherSize = {}, domSize = {}, styleSize = {},
-      otherSize = {}, totalSize = {}, jsMilliseconds = {}, nonJSMilliseconds = {};
-    var contentWindow = tabUtils.getTabContentWindow(viewFor(tab));
-    mgr.sizeOfTab(contentWindow, jsObjectsSize, jsStringsSize, jsOtherSize,
-      domSize, styleSize, otherSize, totalSize,
-      jsMilliseconds, nonJSMilliseconds);
-
-    update(
-      tab,
-      DownloadUtils.convertByteUnits(totalSize.value).join('').replace('MB', 'M').replace('KB', 'K')
-    );
+    report(tab);
   };
 })();
 
 tabs.on('ready', refresh);
+tabs.on('open', refresh);
 pageMod.PageMod({
   include: '*',
   attachTo: ['top', 'existing', 'frame'],
@@ -111,9 +137,16 @@ pageMod.PageMod({
     });
   }
 });
-for (let tab of tabs) {
-  refresh(tab);
+
+function refreshAll() {
+  for (let tab of tabs) {
+    refresh(tab);
+  }
 }
+refreshAll();
+
+sp.on('position', refreshAll);
+sp.on('delimiter', refreshAll);
 
 unload.when(function () {
   for (let tab of tabs) {
