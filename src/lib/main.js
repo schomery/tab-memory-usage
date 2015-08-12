@@ -56,7 +56,10 @@ var report = (function () {
   return function (tab) {
     if (tab) {
       timers.setTimeout(function () {
-        tabUtils.getBrowserForTab(viewFor(tab)).messageManager.sendAsyncMessage('report');
+        var mm = tabUtils.getBrowserForTab(viewFor(tab));
+        if (mm) {
+          mm.messageManager.sendAsyncMessage('report');
+        }
       }, 500);
     }
   };
@@ -78,8 +81,8 @@ var report = (function () {
 
 function title (value) {
   return value
-    .replace(/^[\d\.\,]+.\ [\:\-\|]\ /, '')
-    .replace(/\ [\:\-\|]\ [\d\.\,]+.$/, '');
+    .replace(/^[\d\.\,]+.{1,2}\ [\:\-\|]\ /, '')
+    .replace(/\ [\:\-\|]\ [\d\.\,]+.{1,2}$/, '');
 }
 function update (id, value) {
   var delimiter = [':', '-', '|'][prefs.delimiter];
