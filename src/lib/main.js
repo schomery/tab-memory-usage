@@ -52,9 +52,13 @@ var report = (function () {
       mm.removeMessageListener('report', listen);
       mm.sendAsyncMessage('detach');
     }
+    for (let window of windows) {
+      var mm = viewFor(window).messageManager;
+      mm.removeMessageListener('report', listen);
+    }
   });
   return function (tab) {
-    if (tab) {
+    if (typeof tab !== 'undefined' && tab) {
       timers.setTimeout(function () {
         var mm = tabUtils.getBrowserForTab(viewFor(tab));
         if (mm) {
@@ -67,13 +71,19 @@ var report = (function () {
 
 // welcome
 (function () {
+  if (!prefs.welcome) {
+    return;
+  }
   var version = prefs.version;
   if (self.version !== version) {
     timers.setTimeout(function () {
-      tabs.open(
-        'http://mybrowseraddon.com/tab-memory.html?v=' + self.version +
-        (version && version !== 'undefined' ? '&p=' + version + '&type=upgrade' : '&type=install')
-      );
+      let url = 'http://mybrowseraddon.com/tab-memory.html?v=' + self.version;
+      if (version && version !== 'undefined') {
+        tabs.open({url: url + '&p=' + version + '&type=upgrade', inBackground: true});
+      }
+      else {
+        tabs.open(url + '&type=install');
+      }
       prefs.version = self.version;
     }, 3000);
   }
@@ -84,11 +94,15 @@ function title (value) {
     .replace(/^[\d\.\,]+.{1,2}\ [\:\-\|]\ /, '')
     .replace(/\ [\:\-\|]\ [\d\.\,]+.{1,2}$/, '');
 }
+function exception (value) {
+  return prefs.exceptions.split(/\s*\,\s*/).filter(e => value.indexOf(e) !== -1).length !== 0;
+}
 function update (id, value) {
   var delimiter = [':', '-', '|'][prefs.delimiter];
 
   for (let tab of tabs) {
-    if (tab.id === id) {
+    console.error(tab.url, exception(tab.url));
+    if (tab.id === id && !exception(tab.url)) {
       tab.title = prefs.position === 0 ?
         (value + ' ' + delimiter + ' ' + title(tab.title)) :
         (title(tab.title) + ' ' + delimiter + ' ' + value);
@@ -104,26 +118,29 @@ var refresh = (function () {
   var delay = 3000, times = {}, ids = {};
 
   return function (tab, forced) {
-    if (!tab) {
-      return;
-    }
-    var time = times[tab.id];
-    var id = ids[tab.id];
+    try {
+      if (typeof tab === 'undefined' || typeof tab === undefined || !tab || !tab.id) {
+        return;
+      }
+      var time = times[tab.id];
+      var id = ids[tab.id];
 
-    if (id && !forced) {
-      return;
+      if (id && !forced) {
+        return;
+      }
+      if (forced) {
+        ids[tab.id] = null;
+      }
+      var now = new Date().getTime();
+      if (time && now - time < delay) {
+        ids[tab.id] = timers.setTimeout(refresh, delay - (now - time), tab, true);
+        return;
+      }
+      //console.error((new Date()).toString(), 'refreshing ...', tab.id);
+      times[tab.id] = now;
+      report(tab);
     }
-    if (forced) {
-      ids[tab.id] = null;
-    }
-    var now = new Date().getTime();
-    if (time && now - time < delay) {
-      ids[tab.id] = timers.setTimeout(refresh, delay - (now - time), tab, true);
-      return;
-    }
-    //console.error((new Date()).toString(), 'refreshing ...', tab.id);
-    times[tab.id] = now;
-    report(tab);
+    catch (e) {};
   };
 })();
 

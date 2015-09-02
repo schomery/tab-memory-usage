@@ -5,7 +5,7 @@
   "description": "Tab Memory Usage displays the amount of memory is used by each tab",
   "author": "Jeremy Schomery",
   "license": "MPL 2.0",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "url": "http://mybrowseraddon.com/tab-memory.html",
   "icon": "data/icons/32.png",
   "icon64": "data/icons/64.png",
@@ -50,6 +50,20 @@
           "label": "|"
         }
       ]
+    },
+    {
+      "type": "string",
+      "name": "exceptions",
+      "value": "",
+      "title": "Exception list (comma separated):",
+      "description": "Do not append memory usage to the tabs with URLs matching this list. Memory usage is appended to the title of each document. Some websites use this title later to generate a new title. This will cause accumulation of memory usage on the title bar."
+    },
+    {
+      "description": "After each upgrade by default the extension opens its welcome page to notify user about the recent changes",
+      "type": "bool",
+      "name": "welcome",
+      "value": true,
+      "title": "Welcome page:"
     }
   ]
 }
