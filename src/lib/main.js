@@ -95,13 +95,12 @@ function title (value) {
     .replace(/\ [\:\-\|]\ [\d\.\,]+.{1,2}$/, '');
 }
 function exception (value) {
-  return prefs.exceptions.split(/\s*\,\s*/).filter(e => value.indexOf(e) !== -1).length !== 0;
+  return (prefs.exceptions || '').split(/\s*\,\s*/).filter(e => e).filter(e => value.indexOf(e) !== -1).length !== 0;
 }
 function update (id, value) {
   var delimiter = [':', '-', '|'][prefs.delimiter];
 
   for (let tab of tabs) {
-    console.error(tab.url, exception(tab.url));
     if (tab.id === id && !exception(tab.url)) {
       tab.title = prefs.position === 0 ?
         (value + ' ' + delimiter + ' ' + title(tab.title)) :
