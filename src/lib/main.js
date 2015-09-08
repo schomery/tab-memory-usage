@@ -114,9 +114,10 @@ function remove (tab) {
 }
 
 var refresh = (function () {
-  var delay = 3000, times = {}, ids = {};
+  var times = {}, ids = {};
 
   return function (tab, forced) {
+    var delay = prefs.delay * 1000;
     try {
       if (typeof tab === 'undefined' || typeof tab === undefined || !tab || !tab.id) {
         return;
@@ -166,6 +167,11 @@ refreshAll();
 
 sp.on('position', refreshAll);
 sp.on('delimiter', refreshAll);
+sp.on('delay', function () {
+  if (prefs.delay < 3) {
+    prefs.delay = 3;
+  }
+});
 
 unload.when(function () {
   for (let tab of tabs) {

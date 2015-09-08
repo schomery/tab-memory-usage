@@ -52,6 +52,13 @@
       ]
     },
     {
+      "description": "If you usually have many open tabs, prolong the time interval.",
+      "type": "integer",
+      "name": "delay",
+      "value": 5,
+      "title": "Minimum time interval between memory calculations for a single tab (in seconds):"
+    },
+    {
       "type": "string",
       "name": "exceptions",
       "value": "",
