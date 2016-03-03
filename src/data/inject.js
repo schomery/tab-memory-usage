@@ -15,6 +15,16 @@ observer.observe(document, {
   characterDataOldValue: true
 });
 
+function onload () {
+  self.port.emit('update');
+}
+
+document.addEventListener('DOMContentLoaded', onload, false);
+
 self.port.on('detach', function () {
   observer.disconnect();
+  try {
+    document.removeEventListener('DOMContentLoaded', onload, false);
+  }
+  catch (e) {}
 });

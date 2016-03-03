@@ -1,23 +1,57 @@
 {
   "name": "itmemory",
   "title": "Tab Memory Usage",
-  "id": "jid1-fRvgLzKONCsPew",
+  "id": "jid1-fRvgLzKONCsPew@jetpack",
   "description": "Tab Memory Usage displays the amount of memory is used by each tab",
   "author": "Jeremy Schomery",
   "license": "MPL 2.0",
-  "version": "0.1.8",
+  "version": "0.2.2",
   "url": "http://mybrowseraddon.com/tab-memory.html",
-  "icon": "data/icons/32.png",
-  "icon64": "data/icons/64.png",
+  "main": "./lib/main.js",
   "permissions": {
     "private-browsing": true
   },
   "preferences": [
     {
+      "name": "mode",
+      "type": "menulist",
+      "title": "Memory report mode:",
+      "description": "Inside: Memory report is appended to the actual title element. Outside: Memory report is placed inside a new element (similar to sound notification). Toolbar: Display memory usage inside a toolbar button badge. Wait for a few seconds for the change to take place.",
+      "value": 2,
+      "options": [
+        {
+          "value": "0",
+          "label": "Inside"
+        },
+        {
+          "value": "1",
+          "label": "Outside"
+        },
+        {
+          "value": "2",
+          "label": "Toolbar"
+        }
+      ]
+    },
+    {
+      "type": "color",
+      "name": "begin",
+      "value": "#4d4d4d",
+      "title": "Color code for Memory usage 0% (only for toolbar mode):",
+      "description": "Percent is calculated by dividing memory usage to 50Mbytes"
+    },
+    {
+      "type": "color",
+      "name": "end",
+      "value": "#FF0000",
+      "title": "Color code for Memory usage l00%  (only for inside mode):",
+      "description": "Percent is calculated by dividing memory usage to 50Mbytes"
+    },
+    {
       "name": "position",
       "type": "menulist",
-      "title": "Memory report position:",
-      "description": "This is where memory report is positioned on tab relative to the title",
+      "title": "Memory report position (only for inside mode):",
+      "description": "This is where memory report is positioned relative to the title. Wait for a few seconds for the change to take place.",
       "value": 0,
       "options": [
         {
@@ -33,8 +67,8 @@
     {
       "name": "delimiter",
       "type": "menulist",
-      "title": "Memory report delimiter:",
-      "description": "This symbol is used to separate memory report from title",
+      "title": "Memory report delimiter (only for inside mode):",
+      "description": "This symbol is used to separate memory report from title.  Wait for a few seconds for the change to take place.",
       "value": 1,
       "options": [
         {
@@ -52,7 +86,7 @@
       ]
     },
     {
-      "description": "If you usually have many open tabs, prolong the time interval.",
+      "description": "If you usually have many open tabs, prolong the time interval. Note that memory calculation is not taking place if tab is idle.",
       "type": "integer",
       "name": "delay",
       "value": 5,
