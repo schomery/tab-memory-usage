@@ -14,9 +14,14 @@ var windows   = require('sdk/windows').browserWindows;
 var buttons   = require('sdk/ui/button/action');
 var {Cu}      = require('chrome');
 var {viewFor} = require('sdk/view/core');
+var {getNodeView} = require('sdk/view/core');
 
 var {DownloadUtils} = Cu.import('resource://gre/modules/DownloadUtils.jsm');
 var {Services} = Cu.import('resource://gre/modules/Services.jsm');
+var {CustomizableUI} = Cu.import('resource:///modules/CustomizableUI.jsm');
+
+var userstyles = require('./userstyles');
+userstyles.load(self.data.url('toolbar.css'));
 
 var methods = {
   inside: (function () {
@@ -71,7 +76,7 @@ var methods = {
     let vcache = new WeakMap();
     let acache = new WeakMap();
     tabs.on('activate', function (tab) {
-      if (prefs.mode === 2) {
+      if (prefs.mode === 2 || prefs.mode === 3) {
         methods.toolbar.update(tab, vcache.get(tab), acache.get(tab));
       }
     });
@@ -128,11 +133,22 @@ var methods = {
         if (!button) {
           create();
         }
+        let node = getNodeView(button);
+        let color = rgb(aValue);
         button.state(tab.window, {
-          label: `Tab Memory Usage -  ${value || 0}`,
+          label: prefs.mode === 2 ? value || '' : `Tab Memory Usage - ${value || 0}`,
           badge: (value.length > 4 ? value.replace(/\.\d+/, '') : value).toLowerCase(),
-          badgeColor: rgb(aValue)
+          badgeColor: color
         });
+        if (prefs.mode === 2) {
+          node.removeAttribute('badge');
+          node.classList.remove('badged-button');
+          node.setAttribute('show-label', 'true');
+          node.setAttribute('style', `color: ${color};`);
+        }
+        else {
+          node.removeAttribute('show-label');
+        }
       },
       remove: function () {
         if (button) {
@@ -151,7 +167,7 @@ function exception (value) {
 function update (id, value, aValue) {
   for (let tab of tabs) {
     if (tab.id === id && !exception(tab.url)) {
-      methods[['inside', 'outside', 'toolbar'][prefs.mode]].update(tab, value, aValue);
+      methods[['inside', 'outside', 'toolbar', 'toolbar'][prefs.mode]].update(tab, value, aValue);
     }
   }
 }

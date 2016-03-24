@@ -29,7 +29,11 @@
         },
         {
           "value": "2",
-          "label": "Toolbar"
+          "label": "Toolbar -> Label"
+        },
+        {
+          "value": "3",
+          "label": "Toolbar -> Badge"
         }
       ]
     },

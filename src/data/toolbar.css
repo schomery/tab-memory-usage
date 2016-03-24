@@ -1,0 +1,13 @@
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+@-moz-document url("chrome://browser/content/browser.xul") {
+  [id*="jid1-frvglzkoncspewjetpack"][show-label][cui-areatype="toolbar"] .toolbarbutton-text {
+    display: -moz-box !important;
+    padding-left: 1px !important;
+  }
+  [id*="jid1-frvglzkoncspewjetpack"][cui-areatype="toolbar"] {
+    max-width: 13em;
+    -moz-box-orient: horizontal !important; /* OS X */
+  }
+}
