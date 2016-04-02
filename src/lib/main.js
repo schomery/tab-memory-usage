@@ -136,7 +136,7 @@ var methods = {
         let color = rgb(aValue);
         button.state(tab.window, {
           label: prefs.mode === 2 ? value || '--' : `Tab Memory Usage - ${value || 0}`,
-          badge: (value.length > 4 ? value.replace(/\.\d+/, '') : value).toLowerCase(),
+          badge: value.replace(/\.\d+/, ''),
           badgeColor: color
         });
         let node = getNodeView(button);
@@ -218,14 +218,14 @@ var report = (function () {
     }
   });
   return function (tab) {
-    if (typeof tab !== 'undefined' && tab) {
       timers.setTimeout(function () {
-        let mm = tabUtils.getBrowserForTab(viewFor(tab));
-        if (mm) {
-          mm.messageManager.sendAsyncMessage('report');
+        if (typeof tab !== 'undefined' && tab) {
+          let mm = tabUtils.getBrowserForTab(viewFor(tab));
+          if (mm) {
+            mm.messageManager.sendAsyncMessage('report');
+          }
         }
       }, 500);
-    }
   };
 })();
 
