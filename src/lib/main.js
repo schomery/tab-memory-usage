@@ -133,21 +133,23 @@ var methods = {
         if (!button) {
           create();
         }
-        let node = getNodeView(button);
         let color = rgb(aValue);
         button.state(tab.window, {
-          label: prefs.mode === 2 ? value || '' : `Tab Memory Usage - ${value || 0}`,
+          label: prefs.mode === 2 ? value || '--' : `Tab Memory Usage - ${value || 0}`,
           badge: (value.length > 4 ? value.replace(/\.\d+/, '') : value).toLowerCase(),
           badgeColor: color
         });
-        if (prefs.mode === 2) {
-          node.removeAttribute('badge');
-          node.classList.remove('badged-button');
-          node.setAttribute('show-label', 'true');
-          node.setAttribute('style', `color: ${color};`);
-        }
-        else {
-          node.removeAttribute('show-label');
+        let node = getNodeView(button);
+        if (node) {
+          if (prefs.mode === 2) {
+            node.removeAttribute('badge');
+            node.classList.remove('badged-button');
+            node.setAttribute('show-label', 'true');
+            node.setAttribute('style', `color: ${color};`);
+          }
+          else {
+            node.removeAttribute('show-label');
+          }
         }
       },
       remove: function () {
