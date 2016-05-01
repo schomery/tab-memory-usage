@@ -163,7 +163,14 @@ var methods = {
 };
 
 function exception (value) {
-  return (prefs.exceptions || '').split(/\s*\,\s*/).filter(e => e).filter(e => value.indexOf(e) !== -1).length !== 0;
+  if (prefs.exceptions) {
+    return prefs.exceptions.split(/\s*\,\s*/).filter(e => e).filter(e => value.indexOf(e) !== -1).length !== 0;
+  }
+  if (prefs.includes) {
+    return prefs.includes.split(/\s*\,\s*/).filter(e => e).filter(e => value.indexOf(e) !== -1).length === 0;
+  }
+
+  return false;
 }
 
 function update (id, value, aValue) {
