@@ -5,11 +5,14 @@
   "description": "Tab Memory Usage displays the amount of memory is used by each tab",
   "author": "Jeremy Schomery",
   "license": "MPL 2.0",
-  "version": "0.2.5",
+  "version": "0.2.7",
   "url": "http://mybrowseraddon.com/tab-memory.html",
   "main": "./lib/main.js",
+  "icon": "./data/icons/48.png",
+  "icon64": "./data/icons/64.png",
   "permissions": {
-    "private-browsing": true
+    "private-browsing": true,
+    "multiprocess": true
   },
   "preferences": [
     {
@@ -93,8 +96,15 @@
       "description": "If you usually have many open tabs, prolong the time interval. Note that memory calculation is not taking place if tab is idle.",
       "type": "integer",
       "name": "delay",
-      "value": 5,
+      "value": 10,
       "title": "Minimum time interval between memory calculations for a single tab (in seconds):"
+    },
+    {
+      "description": "Use zero to display memory usage of all tabs.",
+      "type": "integer",
+      "name": "ignore",
+      "value": 5,
+      "title": "Do not display memory usage if tab consumes less than (in MBytes):"
     },
     {
       "type": "string",

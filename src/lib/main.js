@@ -31,11 +31,16 @@ var methods = {
         .replace(/\ [\:\-\|]\ [\d\.\,]+.{1,2}$/, '');
     }
     return {
-      update: function (tab, value) {
-        var delimiter = [':', '-', '|'][prefs.delimiter];
-        tab.title = prefs.position === 0 ?
-          (value + ' ' + delimiter + ' ' + title(tab.title)) :
-          (title(tab.title) + ' ' + delimiter + ' ' + value);
+      update: function (tab, value, aValue) {
+        if (aValue >= sp.prefs.ignore * 1024 * 1024) {
+          var delimiter = [':', '-', '|'][prefs.delimiter];
+          tab.title = prefs.position === 0 ?
+            (value + ' ' + delimiter + ' ' + title(tab.title)) :
+            (title(tab.title) + ' ' + delimiter + ' ' + value);
+        }
+        else {
+          tab.title = title(tab.title);
+        }
       },
       remove: function (tab) {
         tab.title = title(tab.title);
@@ -43,7 +48,7 @@ var methods = {
     };
   })(),
   outside: {
-    update: function (tab, value) {
+    update: function (tab, value, aValue) {
       tab = viewFor(tab);
       let document = tab.ownerDocument;
       let label = document.getAnonymousElementByAttribute(tab, 'anonid', 'tab-memory');
@@ -59,7 +64,7 @@ var methods = {
         }
       }
       if (label) {
-        label.setAttribute('value', value);
+        label.setAttribute('value', aValue >= sp.prefs.ignore * 1024 * 1024 ? value : '');
       }
     },
     remove: function (tab) {
@@ -134,14 +139,15 @@ var methods = {
           create();
         }
         let color = rgb(aValue);
+        let show = aValue >= sp.prefs.ignore * 1024 * 1024;
         button.state(tab.window, {
           label: prefs.mode === 2 ? value || '--' : `Tab Memory Usage - ${value || 0}`,
-          badge: value.replace(/\.\d+/, ''),
+          badge: show ? value.replace(/\.\d+/, '') : '',
           badgeColor: color
         });
         let node = getNodeView(button);
         if (node) {
-          if (prefs.mode === 2) {
+          if (prefs.mode === 2 && show) {
             node.removeAttribute('badge');
             node.classList.remove('badged-button');
             node.setAttribute('show-label', 'true');
